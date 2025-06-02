@@ -21,7 +21,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FontLoader.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/helvetiker_regular.typeface.json"></script>
 
 <script>
   const scene = new THREE.Scene();
@@ -42,7 +41,7 @@
   const ambient = new THREE.AmbientLight(0xff69b4, 0.5);
   scene.add(ambient);
 
-  const texts = ["Yêu", "Em", "Nhiều", "Lắm", "❤️", "Vũ", "Trụ", "Mãi", "Bên", "Nhau"];
+  const texts = ["Chat GPT khong phe ", "Mai yeu Haui ", "Haui trong tim toi ", "My family is the best", "❤️", "em la duy nhat ", "BA-25/5/2025-Ghi dau tuoi thanh xuan", "Mai ben nhau ban nhe !", "Nong vai ca chuong ", "Nhau"];
 
   const fontLoader = new THREE.FontLoader();
 
@@ -55,6 +54,10 @@
 
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
+
+  // Màu emissive mặc định và phát sáng
+  const emissiveDefault = new THREE.Color(0xff1493);  // hồng đậm
+  const emissiveGlow = new THREE.Color(0xffffff);     // trắng sáng
 
   // Tạo text mesh
   function createTextMesh(font, text) {
@@ -71,9 +74,8 @@
 
     const material = new THREE.MeshPhongMaterial({
       color: 0xff69b4,
-      emissive: 0xff1493,
-      shininess: 100,
-      emissiveIntensity: 1
+      emissive: emissiveDefault.clone(),
+      shininess: 100
     });
 
     const mesh = new THREE.Mesh(geometry, material);
@@ -84,8 +86,7 @@
   function createHeartMesh(heartGeo) {
     const heartMat = new THREE.MeshPhongMaterial({
       color: 0xff69b4,
-      emissive: 0xff1493,
-      emissiveIntensity: 1
+      emissive: emissiveDefault.clone()
     });
     const heart = new THREE.Mesh(heartGeo, heartMat);
     heart.scale.set(0.8, 0.8, 0.8);
@@ -161,12 +162,16 @@
         const picked = intersects[0].object;
         if(selectedMesh !== picked) {
           if(selectedMesh) {
-            selectedMesh.material.emissiveIntensity = 1;
+            // Reset màu emissive mesh cũ
+            selectedMesh.material.emissive.copy(emissiveDefault);
           }
           selectedMesh = picked;
           glowIntensity = 0;
         }
       } else {
+        if(selectedMesh) {
+          selectedMesh.material.emissive.copy(emissiveDefault);
+        }
         selectedMesh = null;
       }
     });
@@ -180,13 +185,16 @@
 
         if(obj.mesh === selectedMesh) {
           glowIntensity += 0.02;
-          if(glowIntensity > 5) glowIntensity = 5;
-          obj.mesh.material.emissiveIntensity = glowIntensity;
+          if(glowIntensity > 1) glowIntensity = 1;
+          // Lerp màu emissive từ default sang trắng sáng
+          obj.mesh.material.emissive.lerpColors(emissiveDefault, emissiveGlow, glowIntensity);
         } else {
-          if(obj.mesh.material.emissiveIntensity > 1) {
-            obj.mesh.material.emissiveIntensity -= 0.02;
-            if(obj.mesh.material.emissiveIntensity < 1) obj.mesh.material.emissiveIntensity = 1;
+          if(glowIntensity > 0) {
+            glowIntensity -= 0.02;
+            if(glowIntensity < 0) glowIntensity = 0;
           }
+          // Giảm sáng dần về màu mặc định
+          obj.mesh.material.emissive.lerpColors(obj.mesh.material.emissive, emissiveDefault, 0.1);
         }
       });
 

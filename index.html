@@ -17,7 +17,6 @@
 </head>
 <body>
 
-<!-- Three.js và OrbitControls -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FontLoader.js"></script>
@@ -25,7 +24,7 @@
 <script>
   const scene = new THREE.Scene();
 
-  const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 2000);
   camera.position.z = 100;
 
   const renderer = new THREE.WebGLRenderer({antialias: true});
@@ -41,7 +40,12 @@
   const ambient = new THREE.AmbientLight(0xff69b4, 0.5);
   scene.add(ambient);
 
-  const texts = ["Chat GPT khong phe ", "Mai yeu Haui ", "Haui trong tim toi ", "My family is the best", "❤️", "em la duy nhat ", "BA-25/5/2025-Ghi dau tuoi thanh xuan", "Mai ben nhau ban nhe !", "Nong vai ca chuong ", "Nhau"];
+  const texts = [
+    "I love you 3000 ", "Mai yeu Haui ", "To me, you are perfect ", "My family is the best", 
+    "❤️", "em la duy nhat ", "BA-25/5/2025-Ghi dau tuoi thanh xuan", 
+    "You are my everything <3 ", "You are my sunshine ",
+    "I love you","You’re my soulmate", "Believe in the spirit of love… It can heal all things..."
+  ];
 
   const fontLoader = new THREE.FontLoader();
 
@@ -50,51 +54,44 @@
   let textMeshes = [];
 
   let selectedMesh = null;
-  let glowIntensity = 0;
 
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
 
-  // Màu emissive mặc định và phát sáng
-  const emissiveDefault = new THREE.Color(0xff1493);  // hồng đậm
-  const emissiveGlow = new THREE.Color(0xffffff);     // trắng sáng
+  const emissiveDefault = new THREE.Color(0xff1493);
+  const emissiveGlow = new THREE.Color(0xffffff);
 
-  // Tạo text mesh
-  function createTextMesh(font, text) {
-    const geometry = new THREE.TextGeometry(text, {
-      font: font,
-      size: 3,
-      height: 1,
-      curveSegments: 8,
-      bevelEnabled: true,
-      bevelThickness: 0.2,
-      bevelSize: 0.2,
-      bevelSegments: 2
+  // Sao nhấp nháy
+  function createStars() {
+    const starGeometry = new THREE.BufferGeometry();
+    const starCount = 500;
+    const starPositions = [];
+
+    for (let i = 0; i < starCount; i++) {
+      const x = (Math.random() - 0.5) * 1000;
+      const y = (Math.random() - 0.5) * 1000;
+      const z = (Math.random() - 0.5) * 1000;
+      starPositions.push(x, y, z);
+    }
+
+    starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
+
+    const starMaterial = new THREE.PointsMaterial({
+      color: 0xffffff,
+      size: 1.5,
+      transparent: true,
+      opacity: 0.8
     });
 
-    const material = new THREE.MeshPhongMaterial({
-      color: 0xff69b4,
-      emissive: emissiveDefault.clone(),
-      shininess: 100
-    });
+    const stars = new THREE.Points(starGeometry, starMaterial);
+    scene.add(stars);
 
-    const mesh = new THREE.Mesh(geometry, material);
-    return mesh;
+    return { stars, starMaterial };
   }
 
-  // Tạo hình trái tim mesh
-  function createHeartMesh(heartGeo) {
-    const heartMat = new THREE.MeshPhongMaterial({
-      color: 0xff69b4,
-      emissive: emissiveDefault.clone()
-    });
-    const heart = new THREE.Mesh(heartGeo, heartMat);
-    heart.scale.set(0.8, 0.8, 0.8);
-    return heart;
-  }
+  const { stars, starMaterial } = createStars();
 
   fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function(font) {
-    // Tạo shape trái tim
     const heartShape = new THREE.Shape();
     heartShape.moveTo(0, 0);
     heartShape.bezierCurveTo(0, 0, -2, -2, -2, -4);
@@ -111,66 +108,100 @@
       bevelThickness: 0.3
     });
 
+    function createTextMesh(text) {
+      const geometry = new THREE.TextGeometry(text, {
+        font: font,
+        size: 3,
+        height: 1,
+        curveSegments: 8,
+        bevelEnabled: true,
+        bevelThickness: 0.2,
+        bevelSize: 0.2,
+        bevelSegments: 2
+      });
+
+      const material = new THREE.MeshPhongMaterial({
+        color: 0xff69b4,
+        emissive: emissiveDefault.clone(),
+        shininess: 100
+      });
+
+      const mesh = new THREE.Mesh(geometry, material);
+      return mesh;
+    }
+
+    function createHeartMesh() {
+      const material = new THREE.MeshPhongMaterial({
+        color: 0xff69b4,
+        emissive: emissiveDefault.clone()
+      });
+      const heart = new THREE.Mesh(heartGeo, material);
+      heart.scale.set(0.8, 0.8, 0.8);
+      return heart;
+    }
+
     function addObjects(numTexts, numHearts, range) {
       for(let i = 0; i < numTexts; i++) {
-        const text = texts[Math.floor(Math.random()*texts.length)];
-        const mesh = createTextMesh(font, text);
+        const text = texts[Math.floor(Math.random() * texts.length)];
+        const mesh = createTextMesh(text);
         mesh.position.set(
-          (Math.random() - 0.5)*range,
-          (Math.random() - 0.5)*range,
-          (Math.random() - 0.5)*range
+          (Math.random() - 0.5) * range,
+          (Math.random() - 0.5) * range,
+          (Math.random() - 0.5) * range
         );
+        mesh.userData.glowPulse = 0;
         scene.add(mesh);
         textMeshes.push({
-          mesh: mesh,
+          mesh,
           velocity: new THREE.Vector3(
-            (Math.random() - 0.5)*0.3,
-            -(Math.random())*0.5,
-            (Math.random() - 0.5)*0.3
+            (Math.random() - 0.5) * 0.3,
+            -Math.random() * 0.5,
+            (Math.random() - 0.5) * 0.3
           )
         });
       }
+
       for(let i = 0; i < numHearts; i++) {
-        const heart = createHeartMesh(heartGeo);
+        const heart = createHeartMesh();
         heart.position.set(
-          (Math.random() - 0.5)*range,
-          (Math.random() - 0.5)*range,
-          (Math.random() - 0.5)*range
+          (Math.random() - 0.5) * range,
+          (Math.random() - 0.5) * range,
+          (Math.random() - 0.5) * range
         );
+        heart.userData.glowPulse = 0;
         scene.add(heart);
         textMeshes.push({
           mesh: heart,
           velocity: new THREE.Vector3(
-            (Math.random() - 0.5)*0.2,
-            -Math.random()*0.3,
-            (Math.random() - 0.5)*0.2
+            (Math.random() - 0.5) * 0.2,
+            -Math.random() * 0.3,
+            (Math.random() - 0.5) * 0.2
           )
         });
       }
     }
 
-    // Tạo ban đầu
     addObjects(maxTextsBase, maxHeartsBase, 200);
 
-    // Bắt sự kiện click chọn mesh
     renderer.domElement.addEventListener('click', event => {
-      mouse.x = (event.clientX / window.innerWidth)*2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight)*2 + 1;
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(textMeshes.map(obj => obj.mesh));
-      if(intersects.length > 0) {
+      if (intersects.length > 0) {
         const picked = intersects[0].object;
-        if(selectedMesh !== picked) {
-          if(selectedMesh) {
-            // Reset màu emissive mesh cũ
+        if (selectedMesh !== picked) {
+          if (selectedMesh) {
             selectedMesh.material.emissive.copy(emissiveDefault);
+            selectedMesh.userData.glowPulse = 0;
           }
           selectedMesh = picked;
-          glowIntensity = 0;
+          selectedMesh.userData.glowPulse = 1.5; // ánh sáng bùng lên
         }
       } else {
-        if(selectedMesh) {
+        if (selectedMesh) {
           selectedMesh.material.emissive.copy(emissiveDefault);
+          selectedMesh.userData.glowPulse = 0;
         }
         selectedMesh = null;
       }
@@ -181,33 +212,30 @@
 
       textMeshes.forEach(obj => {
         obj.mesh.position.add(obj.velocity);
-        if(obj.mesh.position.y < -100) obj.mesh.position.y = 100;
+        if (obj.mesh.position.y < -100) obj.mesh.position.y = 100;
 
-        if(obj.mesh === selectedMesh) {
-          glowIntensity += 0.02;
-          if(glowIntensity > 1) glowIntensity = 1;
-          // Lerp màu emissive từ default sang trắng sáng
-          obj.mesh.material.emissive.lerpColors(emissiveDefault, emissiveGlow, glowIntensity);
+        const pulse = obj.mesh.userData.glowPulse || 0;
+        if (obj.mesh === selectedMesh && pulse > 0) {
+          obj.mesh.material.emissive.lerpColors(emissiveDefault, emissiveGlow, Math.min(pulse, 1));
+          obj.mesh.userData.glowPulse -= 0.02;
         } else {
-          if(glowIntensity > 0) {
-            glowIntensity -= 0.02;
-            if(glowIntensity < 0) glowIntensity = 0;
-          }
-          // Giảm sáng dần về màu mặc định
           obj.mesh.material.emissive.lerpColors(obj.mesh.material.emissive, emissiveDefault, 0.1);
         }
       });
 
+      // Nhấp nháy sao
+      starMaterial.opacity = 0.5 + 0.3 * Math.sin(Date.now() * 0.001);
+
       controls.update();
       renderer.render(scene, camera);
 
-      if(camera.position.z > 120) {
-        const desiredCount = Math.floor((camera.position.z - 100)*2) + maxTextsBase + maxHeartsBase;
-        if(textMeshes.length < desiredCount) {
+      if (camera.position.z > 120) {
+        const desiredCount = Math.floor((camera.position.z - 100) * 2) + maxTextsBase + maxHeartsBase;
+        if (textMeshes.length < desiredCount) {
           const toAdd = desiredCount - textMeshes.length;
-          const addTexts = Math.floor(toAdd*maxTextsBase/(maxTextsBase + maxHeartsBase));
+          const addTexts = Math.floor(toAdd * maxTextsBase / (maxTextsBase + maxHeartsBase));
           const addHearts = toAdd - addTexts;
-          const range = 200 + (camera.position.z - 100)*10;
+          const range = 200 + (camera.position.z - 100) * 10;
           addObjects(addTexts, addHearts, range);
         }
       }
@@ -221,7 +249,6 @@
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
-
 </script>
 
 </body>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { margin: 0; overflow: hidden; background: black; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+
+<script src="https://cdn.jsdelivr.net/gh/nhaccuahuong/js@main/chukhonggian.js"></script>
+
+<script>
+const Jansharenoidung = [
+ "Yêu em nhiều lắm",
+    "Luôn nhớ em",
+    "Em là tất cả",
+    "Yêu em /",
+    "Bên em là đủ",
+    "Anh cần em",
+    "Vì em, anh tồn tại",
+    "Em là định mệnh",
+    "Chỉ yêu mỗi mình em",
+];
+</script>
+<script src="https://cdn.jsdelivr.net/gh/nhaccuahuong/js@main/jschuchay.js"></script>
+</body>
+</html>

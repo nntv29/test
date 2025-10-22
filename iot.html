@@ -71,8 +71,7 @@
 
   <script>
     // ⚠️ THAY IP Node-RED bằng địa chỉ thật (ví dụ: 192.168.1.100 hoặc localhost)
-    const NODE_RED_URL = "https://sliceable-overboastfully-josie.ngrok-free.dev/mqtt";
-
+const NODE_RED_URL = "https://sliceable-overboastfully-josie.ngrok-free.dev/mqtt";
     async function sendCommand(topic, payload) {
       try {
         const res = await fetch(NODE_RED_URL, {

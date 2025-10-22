@@ -44,19 +44,26 @@
       font-weight: bold;
       color: green;
     }
+
     /* 🔆 LED indicator */
     #led-indicator {
-      width: 50px;
-      height: 50px;
-      margin: 20px auto;
+      width: 80px;
+      height: 80px;
+      margin: 30px auto 10px;
       border-radius: 50%;
       background-color: gray;
       box-shadow: 0 0 10px rgba(0,0,0,0.2);
-      transition: background-color 0.3s, box-shadow 0.3s;
+      transition: all 0.4s ease;
     }
     #led-indicator.on {
       background-color: yellow;
-      box-shadow: 0 0 30px 10px yellow;
+      box-shadow: 0 0 30px 15px yellow;
+    }
+
+    #led-status-text {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2c3e50;
     }
   </style>
 </head>
@@ -66,6 +73,7 @@
 
   <!-- Biểu tượng LED hiển thị trạng thái -->
   <div id="led-indicator"></div>
+  <div id="led-status-text">💤 LED đang TẮT</div>
 
   <div>
     <button onclick="toggleLED(true)">💡 Bật LED</button>
@@ -87,9 +95,10 @@
   <div id="status"></div>
 
   <script>
-    // ⚠️ Thay bằng địa chỉ Node-RED qua ngrok của bạn
+    // ⚠️ Thay bằng địa chỉ Node-RED (qua ngrok)
     const NODE_RED_URL = "https://sliceable-overboastfully-josie.ngrok-free.dev/mqtt";
     const ledIndicator = document.getElementById("led-indicator");
+    const ledStatusText = document.getElementById("led-status-text");
 
     // ⚡ Hàm bật/tắt LED
     async function toggleLED(state) {
@@ -120,16 +129,20 @@
       showStatus(`Đã gửi ${topic}: ${value}`);
     }
 
-    // 💡 Cập nhật biểu tượng LED
+    // 💡 Cập nhật biểu tượng LED và dòng chữ trạng thái
     function updateLED(state) {
       if (state) {
         ledIndicator.classList.add("on");
+        ledStatusText.textContent = "🟢 LED đang BẬT";
+        ledStatusText.style.color = "green";
       } else {
         ledIndicator.classList.remove("on");
+        ledStatusText.textContent = "🔴 LED đang TẮT";
+        ledStatusText.style.color = "red";
       }
     }
 
-    // 🟢 Hiển thị trạng thái gửi lệnh
+    // 🟢 Hiển thị thông báo gửi lệnh
     function showStatus(msg) {
       const s = document.getElementById("status");
       s.textContent = msg;

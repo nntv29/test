@@ -44,15 +44,32 @@
       font-weight: bold;
       color: green;
     }
+    /* 🔆 LED indicator */
+    #led-indicator {
+      width: 50px;
+      height: 50px;
+      margin: 20px auto;
+      border-radius: 50%;
+      background-color: gray;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      transition: background-color 0.3s, box-shadow 0.3s;
+    }
+    #led-indicator.on {
+      background-color: yellow;
+      box-shadow: 0 0 30px 10px yellow;
+    }
   </style>
 </head>
 <body>
 
   <h1>🚀 Điều khiển ESP32 qua Node-RED</h1>
 
+  <!-- Biểu tượng LED hiển thị trạng thái -->
+  <div id="led-indicator"></div>
+
   <div>
-    <button onclick="sendCommand('esp32/led/control', 'ON')">💡 Bật LED</button>
-    <button onclick="sendCommand('esp32/led/control', 'OFF')">🚫 Tắt LED</button>
+    <button onclick="toggleLED(true)">💡 Bật LED</button>
+    <button onclick="toggleLED(false)">🚫 Tắt LED</button>
   </div>
 
   <div class="slider-container">
@@ -70,22 +87,30 @@
   <div id="status"></div>
 
   <script>
-    // ⚠️ THAY IP Node-RED bằng địa chỉ thật (ví dụ: 192.168.1.100 hoặc localhost)
-const NODE_RED_URL = "https://sliceable-overboastfully-josie.ngrok-free.dev/mqtt";
-    async function sendCommand(topic, payload) {
+    // ⚠️ Thay bằng địa chỉ Node-RED qua ngrok của bạn
+    const NODE_RED_URL = "https://sliceable-overboastfully-josie.ngrok-free.dev/mqtt";
+    const ledIndicator = document.getElementById("led-indicator");
+
+    // ⚡ Hàm bật/tắt LED
+    async function toggleLED(state) {
+      const topic = "esp32/led/control";
+      const payload = state ? "ON" : "OFF";
       try {
         const res = await fetch(NODE_RED_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ topic, payload })
         });
-        if (res.ok) showStatus(`Đã gửi: ${topic} → ${payload}`);
-        else showStatus("❌ Gửi thất bại!");
+        if (res.ok) {
+          showStatus(`Đã gửi: ${payload}`);
+          updateLED(state);
+        } else showStatus("❌ Gửi thất bại!");
       } catch (err) {
         showStatus("⚠️ Không thể kết nối Node-RED!");
       }
     }
 
+    // ⚙️ Gửi giá trị motor
     async function updateSpeed(topic, value) {
       await fetch(NODE_RED_URL, {
         method: "POST",
@@ -95,6 +120,16 @@ const NODE_RED_URL = "https://sliceable-overboastfully-josie.ngrok-free.dev/mqtt
       showStatus(`Đã gửi ${topic}: ${value}`);
     }
 
+    // 💡 Cập nhật biểu tượng LED
+    function updateLED(state) {
+      if (state) {
+        ledIndicator.classList.add("on");
+      } else {
+        ledIndicator.classList.remove("on");
+      }
+    }
+
+    // 🟢 Hiển thị trạng thái gửi lệnh
     function showStatus(msg) {
       const s = document.getElementById("status");
       s.textContent = msg;

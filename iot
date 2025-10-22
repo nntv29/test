@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 Dashboard Public</title>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: Arial, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1 { 
+            text-align: center; 
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .control-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #007bff;
+        }
+        .status { 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .online { background: #d4edda; color: #155724; }
+        .offline { background: #f8d7da; color: #721c24; }
+        .slider { 
+            width: 100%; 
+            margin: 15px 0;
+        }
+        button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 12px 24px;
+            border-radius: 5px; 
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        .gauge {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .gauge-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #ffc107, #dc3545);
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 ESP32 DASHBOARD PUBLIC</h1>
+        
+        <div class="control-card">
+            <h3>📊 Kết nối MQTT</h3>
+            <div id="connectionStatus" class="status offline">Đang kết nối...</div>
+        </div>
+
+        <div class="control-card">
+            <h3>💡 Điều khiển LED</h3>
+            <div id="ledStatus" class="status">Trạng thái: Đang tải...</div>
+            <button onclick="controlLED('ON')" id="btnOn">BẬT LED</button>
+            <button onclick="controlLED('OFF')" id="btnOff">TẮT LED</button>
+        </div>
+
+        <div class="control-card">
+            <h3>⚙️ Điều khiển Motor 1</h3>
+            <input type="range" min="0" max="255" value="0" class="slider" id="motor1Slider">
+<div class="gauge">
+                <div class="gauge-fill" id="motor1Gauge" style="width: 0%"></div>
+            </div>
+            <div>Tốc độ: <span id="motor1Value">0</span>/255</div>
+        </div>
+
+        <div class="control-card">
+            <h3>⚙️ Điều khiển Motor 2</h3>
+            <input type="range" min="0" max="255" value="0" class="slider" id="motor2Slider">
+            <div class="gauge">
+                <div class="gauge-fill" id="motor2Gauge" style="width: 0%"></div>
+            </div>
+            <div>Tốc độ: <span id="motor2Value">0</span>/255</div>
+        </div>
+    </div>
+
+    <script>
+        // Kết nối MQTT
+        const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
+        
+        client.on('connect', function() {
+            console.log('Connected to MQTT broker');
+            document.getElementById('connectionStatus').className = 'status online';
+            document.getElementById('connectionStatus').textContent = '✅ Đã kết nối MQTT';
+            
+            // Subscribe các topic
+            client.subscribe('esp32/led/status');
+            client.subscribe('esp32/motor/current1');
+            client.subscribe('esp32/motor/current2');
+            client.subscribe('esp32/status');
+        });
+
+        client.on('message', function(topic, message) {
+            const msg = message.toString();
+            console.log('Received:', topic, msg);
+            
+            if (topic === 'esp32/led/status') {
+                document.getElementById('ledStatus').textContent = `Trạng thái: ${msg}`;
+            }
+            else if (topic === 'esp32/motor/current1') {
+                const speed = parseInt(msg);
+                document.getElementById('motor1Value').textContent = speed;
+                document.getElementById('motor1Gauge').style.width = (speed/255*100) + '%';
+            }
+            else if (topic === 'esp32/motor/current2') {
+                const speed = parseInt(msg);
+                document.getElementById('motor2Value').textContent = speed;
+                document.getElementById('motor2Gauge').style.width = (speed/255*100) + '%';
+            }
+        });
+
+        // Hàm điều khiển LED
+        function controlLED(state) {
+            client.publish('esp32/led/control', state);
+        }
+
+        // Xử lý slider motor 1
+        document.getElementById('motor1Slider').addEventListener('input', function(e) {
+            const speed = e.target.value;
+            client.publish('esp32/motor/speed1', speed);
+        });
+
+        // Xử lý slider motor 2
+        document.getElementById('motor2Slider').addEventListener('input', function(e) {
+            const speed = e.target.value;
+            client.publish('esp32/motor/speed2', speed);
+        });
+    </script>
+</body>
+</html>

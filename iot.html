@@ -7,7 +7,7 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f5f6fa;
+      background: #f0f0f0;
       text-align: center;
       padding: 40px;
     }
@@ -45,25 +45,34 @@
       color: green;
     }
 
-    /* 🔆 LED indicator */
+    /* 🔆 LED hiển thị trạng thái */
+    #led-section {
+      margin: 30px auto;
+    }
+    #led-label {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
     #led-indicator {
-      width: 80px;
-      height: 80px;
-      margin: 30px auto 10px;
+      width: 100px;
+      height: 100px;
+      margin: 10px auto;
       border-radius: 50%;
-      background-color: gray;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      border: 3px solid #555;
+      background-color: #555; /* Màu tắt */
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
       transition: all 0.4s ease;
     }
     #led-indicator.on {
       background-color: yellow;
-      box-shadow: 0 0 30px 15px yellow;
+      box-shadow: 0 0 50px 15px yellow;
     }
-
     #led-status-text {
-      font-size: 18px;
+      font-size: 20px;
       font-weight: bold;
-      color: #2c3e50;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -71,36 +80,39 @@
 
   <h1>🚀 Điều khiển ESP32 qua Node-RED</h1>
 
-  <!-- Biểu tượng LED hiển thị trạng thái -->
-  <div id="led-indicator"></div>
-  <div id="led-status-text">💤 LED đang TẮT</div>
+  <!-- 🔆 Khu vực hiển thị LED -->
+  <div id="led-section">
+    <div id="led-label">Trạng thái LED:</div>
+    <div id="led-indicator"></div>
+    <div id="led-status-text">🔴 LED đang TẮT</div>
+  </div>
 
+  <!-- Các nút điều khiển -->
   <div>
     <button onclick="toggleLED(true)">💡 Bật LED</button>
     <button onclick="toggleLED(false)">🚫 Tắt LED</button>
   </div>
 
+  <!-- Motor -->
   <div class="slider-container">
     <label for="motor1">⚙️ Motor 1 Speed</label><br>
-    <input type="range" id="motor1" min="0" max="255" value="0" 
+    <input type="range" id="motor1" min="0" max="255" value="0"
            oninput="updateSpeed('esp32/motor/speed1', this.value)">
   </div>
 
   <div class="slider-container">
     <label for="motor2">⚙️ Motor 2 Speed</label><br>
-    <input type="range" id="motor2" min="0" max="255" value="0" 
+    <input type="range" id="motor2" min="0" max="255" value="0"
            oninput="updateSpeed('esp32/motor/speed2', this.value)">
   </div>
 
   <div id="status"></div>
 
   <script>
-    // ⚠️ Thay bằng địa chỉ Node-RED (qua ngrok)
     const NODE_RED_URL = "https://sliceable-overboastfully-josie.ngrok-free.dev/mqtt";
     const ledIndicator = document.getElementById("led-indicator");
     const ledStatusText = document.getElementById("led-status-text");
 
-    // ⚡ Hàm bật/tắt LED
     async function toggleLED(state) {
       const topic = "esp32/led/control";
       const payload = state ? "ON" : "OFF";
@@ -119,7 +131,6 @@
       }
     }
 
-    // ⚙️ Gửi giá trị motor
     async function updateSpeed(topic, value) {
       await fetch(NODE_RED_URL, {
         method: "POST",
@@ -129,7 +140,6 @@
       showStatus(`Đã gửi ${topic}: ${value}`);
     }
 
-    // 💡 Cập nhật biểu tượng LED và dòng chữ trạng thái
     function updateLED(state) {
       if (state) {
         ledIndicator.classList.add("on");
@@ -142,7 +152,6 @@
       }
     }
 
-    // 🟢 Hiển thị thông báo gửi lệnh
     function showStatus(msg) {
       const s = document.getElementById("status");
       s.textContent = msg;
